@@ -14,3 +14,6 @@ UPDATE users
 
 -- name: DeleteUser :exec
 DELETE FROM users WHERE id = ?;
+
+-- name: GetUserByEmail :one
+SELECT id, email FROM users WHERE email = ?;
