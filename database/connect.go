@@ -2,15 +2,22 @@ package database
 
 import (
 	"database/sql"
+	"fmt"
+	"log"
+
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/hmada15/go-food-order/config"
 	database "github.com/hmada15/go-food-order/database/sqlc"
 )
 
 func Conn() *database.Queries {
-	db, err := sql.Open("mysql", "root@tcp(localhost:3306)/go-food-order?parseTime=true")
+	dbConfig := config.NewConfig()
+	dataSourceName := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true", dbConfig.MySQL.Username, dbConfig.MySQL.Password, dbConfig.MySQL.Host, dbConfig.MySQL.Port, dbConfig.MySQL.DatabaseName)
+	db, err := sql.Open("mysql", dataSourceName)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 	database := database.New(db)
+	
 	return database
 }
