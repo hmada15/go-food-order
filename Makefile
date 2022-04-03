@@ -6,3 +6,5 @@ test:
 	go test -v -cover ./...
 watch:
 	modd
+boil:
+	sqlboiler mysql --wipe
