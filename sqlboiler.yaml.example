@@ -1,0 +1,12 @@
+mysql:
+  user: root
+  pass: 
+  host: localhost
+  port: 3306
+  dbname: ""
+  sslmode: 'false'
+  blacklist:
+    - schema_migrations
+  auto-columns:
+    created: createdAt
+    updated: updatedAt
