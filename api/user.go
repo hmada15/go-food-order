@@ -2,7 +2,6 @@ package api
 
 import (
 	"context"
-	"database/sql"
 	"net/http"
 
 	"github.com/gookit/validate"
@@ -14,11 +13,10 @@ import (
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 )
 
-var db *sql.DB = database.Conn()
 var ctx = context.Background()
 
 func ListUser(c echo.Context) error {
-	users, _ := models.Users().All(ctx, db)
+	users, _ := models.Users().All(ctx, database.DB)
 
 	response := map[string]models.UserSlice{
 		"data": users,
@@ -29,7 +27,7 @@ func ListUser(c echo.Context) error {
 
 func GetUser(c echo.Context) error {
 	id := helper.StrToInt(c.Param("id"))
-	user, _ := models.FindUser(ctx, db, id)
+	user, _ := models.FindUser(ctx, database.DB, id)
 	if user == nil {
 		return c.JSON(http.StatusNotFound, "User not found")
 	}
@@ -43,7 +41,7 @@ func GetUser(c echo.Context) error {
 
 func CreateUser(c echo.Context) error {
 	validate.AddValidator("emailUnique", func(val interface{}) bool {
-		user, _ := models.Users(qm.Where("email=?", c.FormValue("email"))).One(ctx, db)
+		user, _ := models.Users(qm.Where("email=?", c.FormValue("email"))).One(ctx, database.DB)
 		return user == nil
 	})
 
@@ -63,7 +61,7 @@ func CreateUser(c echo.Context) error {
 		user.Name = c.FormValue("name")
 		user.Email = c.FormValue("email")
 		user.Password = c.FormValue("password")
-		err := user.Insert(ctx, db, boil.Infer())
+		err := user.Insert(ctx, database.DB, boil.Infer())
 		if err != nil {
 			return c.JSON(http.StatusBadRequest, err)
 		}
@@ -83,7 +81,7 @@ func UpdateUser(c echo.Context) error {
 	id := helper.StrToInt(c.Param("id"))
 
 	validate.AddValidator("emailUnique", func(val interface{}) bool {
-		user, _ := models.Users(models.UserWhere.Email.EQ(c.FormValue("email")), models.UserWhere.ID.NEQ(id)).One(ctx, db)
+		user, _ := models.Users(models.UserWhere.Email.EQ(c.FormValue("email")), models.UserWhere.ID.NEQ(id)).One(ctx, database.DB)
 		return user == nil
 	})
 
@@ -99,14 +97,17 @@ func UpdateUser(c echo.Context) error {
 	v.StringRule("password", "minLen:7|maxLen:20")
 
 	if v.Validate() {
-		user, _ := models.FindUser(ctx, db, id)
+		user, _ := models.FindUser(ctx, database.DB, id)
+		if user == nil {
+			return c.JSON(http.StatusNotFound, "User not found")
+		}
 		user.Name = c.FormValue("name")
 		user.Email = c.FormValue("email")
 		if c.FormValue("password") != "" {
 			user.Password = c.FormValue("password")
 		}
 
-		_, err := user.Update(ctx, db, boil.Infer())
+		_, err := user.Update(ctx, database.DB, boil.Infer())
 		if err != nil {
 			return c.JSON(http.StatusBadRequest, err)
 		}
@@ -124,12 +125,12 @@ func UpdateUser(c echo.Context) error {
 
 func DeleteUser(c echo.Context) error {
 	id := helper.StrToInt(c.Param("id"))
-	user, _ := models.FindUser(ctx, db, id)
+	user, _ := models.FindUser(ctx, database.DB, id)
 	if user == nil {
 		return c.JSON(http.StatusNotFound, "User not found")
 	}
 
-	_, err := user.Delete(ctx, db)
+	_, err := user.Delete(ctx, database.DB)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, err)
 	}

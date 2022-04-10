@@ -8,6 +8,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/hmada15/go-food-order/config"
 )
+var DB = Conn()
 
 func Conn() *sql.DB {
 	dbConfig := config.NewConfig()
